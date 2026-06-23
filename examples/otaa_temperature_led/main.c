@@ -32,7 +32,7 @@ const struct lorawan_sx12xx_settings sx12xx_settings = {
         .nss  = 3
     },
     .reset = 15,
-    .busy = 2
+    .busy = 2,
     // sx127x would use dio0 pin, and sx126x dont use it 
     // .dio0  = 7,
     .dio1  = 20

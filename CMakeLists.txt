@@ -123,7 +123,7 @@ target_include_directories(pico_lorawan INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/src/include
 )
 
-target_link_libraries(pico_lorawan INTERFACE pico_loramac_node)
+target_link_libraries(pico_lorawan INTERFACE pico_loramac_node pico_stdlib hardware_rtc)
 add_definitions(-Dsx126x)
 # add_subdirectory("examples/default_dev_eui")
 # add_subdirectory("examples/hello_abp")
