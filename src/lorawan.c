@@ -28,6 +28,8 @@
 #include <string.h>
 
 #include "pico/lorawan.h"
+#include "pico/stdlib.h"
+#include "hardware/rtc.h"
 
 #include "board.h"
 #include "rtc-board.h"
@@ -245,9 +247,9 @@ static int lorawan_init(const struct lorawan_sx12xx_settings* sx12xx_settings, L
     SX126x.Spi = spi1_t;
     SpiInit( &SX126x.Spi, SPI_2, RADIO_MOSI, RADIO_MISO, RADIO_SCLK, NC );
 
-    SX126x.Spi.Nss.pin = sx1276_settings->spi.nss;
-    SX126x.Reset.pin = sx1276_settings->reset;
-    SX126x.DIO1.pin = sx1276_settings->dio1;
+    SX126x.Spi.Nss.pin = sx12xx_settings->spi.nss;
+    SX126x.Reset.pin = sx12xx_settings->reset;
+    SX126x.DIO1.pin = sx12xx_settings->dio1;
 
     SX126xIoInit();
 #endif
@@ -431,11 +433,9 @@ static void OnNetworkParametersChange( CommissioningParams_t* params )
             params->DevAddr = 0;
 
             for (int i = 0; i < 4; i++) {
-                uint8_t b;
-
-                sscanf(device_address + i * 2, "%2hhx", &b);
-
-                params->DevAddr = (params->DevAddr << 8) | b;
+                unsigned int b;   // replaces: uint8_t b;
+                sscanf(device_address + i * 2, "%2x", &b);
+                params->DevAddr = (params->DevAddr << 8) | (uint8_t)b;
             }
         } else {
             // Random seed initialization
@@ -453,7 +453,9 @@ static void OnNetworkParametersChange( CommissioningParams_t* params )
         uint8_t deviceEui[8];
 
         for (int i = 0; i < 8; i++) {
-            sscanf(device_eui + i * 2, "%2hhx", &deviceEui[i]);
+            unsigned int b;
+            sscanf(device_eui + i * 2, "%2x", &b);
+            deviceEui[i] = (uint8_t)b;
         }
 
         mibReq.Type = MIB_DEV_EUI;
@@ -466,7 +468,9 @@ static void OnNetworkParametersChange( CommissioningParams_t* params )
         uint8_t joinEui[8];
 
         for (int i = 0; i < 8; i++) {
-            sscanf(app_eui + i * 2, "%2hhx", &joinEui[i]);
+            unsigned int b;
+            sscanf(app_eui + i * 2, "%2x", &b);
+            joinEui[i] = (uint8_t)b;
         }
 
         mibReq.Type = MIB_JOIN_EUI;
@@ -479,7 +483,9 @@ static void OnNetworkParametersChange( CommissioningParams_t* params )
         uint8_t appKey[16];
 
         for (int i = 0; i < 16; i++) {
-            sscanf(app_key + i * 2, "%2hhx", &appKey[i]);
+            unsigned int b;
+            sscanf(app_key + i * 2, "%2x", &b);
+            appKey[i] = (uint8_t)b;
         }
 
         mibReq.Type = MIB_APP_KEY;
@@ -527,12 +533,14 @@ static void OnNetworkParametersChange( CommissioningParams_t* params )
         uint16_t channelMask[6];
 
         for (int i = 0; i < 6; i++) {
-            uint8_t b[2];
+            unsigned int tmp;
 
-            sscanf(channel_mask + i * 4 + 0, "%2hhx", &b[0]);
-            sscanf(channel_mask + i * 4 + 2, "%2hhx", &b[1]);
+            sscanf(channel_mask + i * 4 + 0, "%2x", &tmp);
+            uint8_t b0 = (uint8_t)tmp;
+            sscanf(channel_mask + i * 4 + 2, "%2x", &tmp);
+            uint8_t b1 = (uint8_t)tmp;
 
-            channelMask[i] = (b[0] << 8) | b[1];
+            channelMask[i] = (b0 << 8) | b1;
         }
 
         mibReq.Type = MIB_CHANNELS_MASK;
